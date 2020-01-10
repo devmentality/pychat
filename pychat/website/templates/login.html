@@ -1,3 +1,4 @@
+{% load static %}
 <html lang="en">
     <head>
         <title>Login</title>
@@ -6,6 +7,6 @@
         <h1>Sign in</h1>
         <label>Login <input type="text" class="login"/></label>
         <button class="submit_btn">Submit</button>
-        <script type="text/javascript" src="/static/auth.mjs"></script>
+        <script type="text/javascript" src="{% static "auth.mjs" %}"></script>
     </body>
 </html>

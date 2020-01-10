@@ -1,7 +1,8 @@
+{% load static %}
 <html lang="en">
 <head>
     <title>Chat</title>
-    <link rel="stylesheet" href="/static/app.css">
+    <link rel="stylesheet" href="{% static "app.css" %}">
 </head>
 <body>
     <div id="app">
@@ -13,6 +14,6 @@
             <textarea id="message-text"></textarea><button id="send-button">Send</button>
         </div>
     </div>
-    <script type="module" src="/static/app.mjs"></script>
+    <script type="module" src="{% static "app.mjs" %}"></script>
 </body>
 </html>
