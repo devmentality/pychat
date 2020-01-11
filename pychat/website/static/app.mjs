@@ -1,12 +1,5 @@
 import { getCookie, makeElement } from "./utils.mjs";
 
-
-const userId = getCookie('userId');
-
-if (userId === undefined)
-    document.location.replace('/login');
-
-
 function createMessageElement(message) {
     return makeElement(
         `<div class="message">
@@ -16,8 +9,7 @@ function createMessageElement(message) {
     );
 }
 
-
-async function onContentLoaded() {
+async function renderMessages() {
     const response = await fetch('/api/messages/',{
         headers: {'x-user-id': getCookie('userId')}
     });
@@ -45,7 +37,36 @@ async function onMessageSend() {
     document.location.reload();
 }
 
-document.addEventListener("DOMContentLoaded", onContentLoaded);
+async function onMessageSendUsingWebsockets() {
+    const messageText = document.querySelector("#message-text").value;
+    socket.send(JSON.stringify(
+        {
+            'userId': userId,
+            'text': messageText
+        })
+    );
+    document.querySelector("#message-text").value = '';
+}
+
+const userId = getCookie('userId');
+
+if (userId === undefined)
+    document.location.replace('/login');
+
+const socket = new WebSocket(`ws://${window.location.host}/ws/chat/`);
+
+socket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+    const message = data['message'];
+    const messageBox = document.querySelector('#messages');
+    messageBox.appendChild(createMessageElement(message));
+};
 
 const sendButton = document.querySelector('#send-button');
-sendButton.addEventListener("click", onMessageSend);
+sendButton.addEventListener("click", onMessageSendUsingWebsockets);
+
+renderMessages();
+
+
+
+
