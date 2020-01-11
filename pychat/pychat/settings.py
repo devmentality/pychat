@@ -73,6 +73,12 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'pychat.routing.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
+
 WSGI_APPLICATION = 'pychat.wsgi.application'
 
 
