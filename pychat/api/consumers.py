@@ -30,7 +30,7 @@ class ChatConsumer(WebsocketConsumer):
             {
                 'type': 'chat_message',
                 'message': {
-                    'author': UserRepository.users[message['userId']].login,
+                    'author': UserRepository.find_user_by_login([message['userId']]).login,
                     'text': message['text']
                 }
             }

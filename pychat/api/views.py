@@ -1,25 +1,11 @@
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET, require_POST
-from django.views.decorators.csrf import  csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
 from .models import *
-from functools import wraps
+from .authentication import require_user_id
+from pychat.settings import SECRET_KEY
 from json import loads
-
-current_user = None
-
-
-def require_user_id(view):
-    @wraps(view)
-    def wrapper(request, *args, **kwargs):
-        global current_user
-        user_id = request.headers.get('x-user-id')
-        if user_id is None:
-            return HttpResponse(status=401)
-        if user_id not in UserRepository.users:
-            return HttpResponse(status=403)
-        current_user = UserRepository.users[user_id]
-        return view(request, *args, **kwargs)
-    return wrapper
+import jwt
 
 
 @require_POST
@@ -27,9 +13,32 @@ def require_user_id(view):
 def create_user(request):
     body = loads(request.body)
     login = body['login']
-    user = User(login)
-    UserRepository.users[user.id] = user
+    password = body['password']
+
+    if UserRepository.find_user_by_login(login) is not None:
+        return HttpResponse(status=403)
+
+    user = UserRepository.create_user(login, password)
     return JsonResponse({'id': user.id})
+
+
+@require_POST
+@csrf_exempt
+def get_token(request):
+    body = loads(request.body)
+    login = body['login']
+    password = body['password']
+    user = UserRepository.find_user_by_login(login)
+
+    if user is None or not user.verify_password(password):
+        return HttpResponse(status=403)
+    jwt_token = jwt.encode({'userId': user.id}, SECRET_KEY, algorithm='HS256').decode('ascii')
+    header_and_payload, signature = jwt_token.rsplit('.', maxsplit=1)
+
+    response = HttpResponse(status=200)
+    response.set_cookie('auth', header_and_payload)
+    response.set_cookie('signature', signature, httponly=True)
+    return response
 
 
 @require_user_id
@@ -38,7 +47,7 @@ def create_user(request):
 def send_message(request):
     body = loads(request.body)
     text = body['text']
-    MessageRepository.messages.append(Message(current_user.id, text))
+    MessageRepository.messages.append(Message(request.user.id, text))
     return JsonResponse({'Result': 'Sent'})
 
 
@@ -46,7 +55,7 @@ def send_message(request):
 @require_GET
 def all_messages(request):
     messages = [
-        {'author': UserRepository.users[msg.author_id].login, 'text': msg.text}
+        {'author': UserRepository.find_user_by_id(msg.author_id).login, 'text': msg.text}
         for msg in MessageRepository.messages
     ]
     return JsonResponse({'messages': messages})
