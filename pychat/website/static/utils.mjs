@@ -11,3 +11,8 @@ export function getCookie(name) {
     ));
     return matches ? decodeURIComponent(matches[1]) : undefined;
 }
+
+export function getUserId() {
+    const payload = atob(getCookie('auth').split('.')[1]);
+    return JSON.parse(payload)['userId'];
+}

@@ -1,4 +1,4 @@
-import { getCookie, makeElement } from "./utils.mjs";
+import { getCookie, makeElement, getUserId } from "./utils.mjs";
 
 function createMessageElement(message) {
     return makeElement(
@@ -11,7 +11,7 @@ function createMessageElement(message) {
 
 async function renderMessages() {
     const response = await fetch('/api/messages/',{
-        headers: {'x-user-id': getCookie('userId')}
+        headers: {'x-auth-with': 'cookies'}
     });
     const messages = (await response.json())['messages'];
 
@@ -28,7 +28,7 @@ async function onMessageSend() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-user-id': getCookie('userId')
+                'x-auth-with': 'cookies'
             },
             body: JSON.stringify({'text': messageText})
         }
@@ -41,16 +41,16 @@ async function onMessageSendUsingWebsockets() {
     const messageText = document.querySelector("#message-text").value;
     socket.send(JSON.stringify(
         {
-            'userId': userId,
+            'userId': getUserId(),
             'text': messageText
         })
     );
     document.querySelector("#message-text").value = '';
 }
 
-const userId = getCookie('userId');
+const authCookie = getCookie('auth');
 
-if (userId === undefined)
+if (authCookie === undefined)
     document.location.replace('/login');
 
 const socket = new WebSocket(`ws://${window.location.host}/ws/chat/`);
