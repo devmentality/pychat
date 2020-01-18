@@ -24,8 +24,6 @@ AUTH_TYPES = {COOKIES_AUTH, HEADER_AUTH}
 def require_user_id(view):
     @wraps(view)
     def wrapper(request, *args, **kwargs):
-        global current_user
-
         if (
                 AUTH_HEADER not in request.headers or
                 request.headers[AUTH_HEADER] not in AUTH_TYPES
