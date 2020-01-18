@@ -32,12 +32,14 @@ def require_user_id(view):
         ):
             return HttpResponse(status=401)
 
-        if request.headers[AUTH_HEADER] == COOKIES_AUTH:
+        if _use_cookie_authentication(request):
             jwt_header_and_payload = request.COOKIES['auth']
             jwt_signature = request.COOKIES['signature']
             jwt_token = jwt_header_and_payload + '.' + jwt_signature
-        elif request.headers[AUTH_HEADER] == HEADER_AUTH:
+        elif _use_authentication_header(request):
             jwt_token = request.headers['Authentication']
+        else:
+            return HttpResponse(status=401)
 
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms='HS256')
         if 'userId' not in payload:
@@ -53,6 +55,18 @@ def require_user_id(view):
     return wrapper
 
 
+def _use_cookie_authentication(request):
+    return (
+        request.headers[AUTH_HEADER] == COOKIES_AUTH and
+        'auth' in request.COOKIES and
+        'signature' in request.COOKIES
+    )
+
+
+def _use_authentication_header(request):
+    return request.headers[AUTH_HEADER] == HEADER_AUTH
+
+
 class WebsocketAuthMiddleware:
     def __init__(self, inner):
         self.inner = inner
@@ -64,17 +78,32 @@ class WebsocketAuthMiddleware:
         }
         cookie = cookies.SimpleCookie(headers['cookie'])
 
-        user = None
-        if 'origin' in headers and headers['origin'] == ORIGIN:
+        if self._use_cookie_authentication(headers, cookie):
             jwt_header_and_payload = cookie['auth'].value
             jwt_signature = cookie['signature'].value
             jwt_token = jwt_header_and_payload + '.' + jwt_signature
-        elif 'origin' not in headers:
+        elif self._use_authentication_header(headers):
             jwt_token = headers['Authentication']
+        else:
+            return self.inner(scope)
 
+        user = None
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms='HS256')
         if 'userId' in payload:
             user_id = payload['userId']
             user = UserRepository.find_user_by_id(user_id)
 
         return self.inner(dict(scope, user=user))
+
+    @staticmethod
+    def _use_cookie_authentication(headers, cookie):
+        return (
+            'origin' in headers and
+            headers['origin'] == ORIGIN and
+            'auth' in cookie and
+            'signature' in cookie
+        )
+
+    @staticmethod
+    def _use_authentication_header(headers):
+        return 'origin' not in headers

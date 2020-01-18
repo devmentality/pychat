@@ -6,8 +6,8 @@ from .models import *
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
-        if 'user' not in self.scope:
-            self.close()
+        if self.scope.get('user') is None:
+            self.close(code=403)
         self.user = self.scope['user']
         self.chat_group_name = 'global'
 
