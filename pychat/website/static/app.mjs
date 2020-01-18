@@ -41,7 +41,6 @@ async function onMessageSendUsingWebsockets() {
     const messageText = document.querySelector("#message-text").value;
     socket.send(JSON.stringify(
         {
-            'userId': getUserId(),
             'text': messageText
         })
     );

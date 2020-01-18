@@ -2,7 +2,17 @@ from django.http import HttpResponse
 from .models import UserRepository
 from pychat.settings import SECRET_KEY
 from functools import wraps
+from http import cookies
 import jwt
+
+'''
+    Custom authentication mechanism.
+    Should be used only via secure connections: https and secure websockets.
+    Pretend to be safe from trivial xss and csrf.
+'''
+
+# Надо в какие-то сеттинги выставить будет
+ORIGIN = 'http://localhost:8000'
 
 
 AUTH_HEADER = 'x-auth-with'
@@ -41,3 +51,30 @@ def require_user_id(view):
 
         return view(request, *args, **kwargs)
     return wrapper
+
+
+class WebsocketAuthMiddleware:
+    def __init__(self, inner):
+        self.inner = inner
+
+    def __call__(self, scope):
+        headers = {
+            name.decode('ascii'): value.decode('ascii')
+            for name, value in scope['headers']
+        }
+        cookie = cookies.SimpleCookie(headers['cookie'])
+
+        user = None
+        if 'origin' in headers and headers['origin'] == ORIGIN:
+            jwt_header_and_payload = cookie['auth'].value
+            jwt_signature = cookie['signature'].value
+            jwt_token = jwt_header_and_payload + '.' + jwt_signature
+        elif 'origin' not in headers:
+            jwt_token = headers['Authentication']
+
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms='HS256')
+        if 'userId' in payload:
+            user_id = payload['userId']
+            user = UserRepository.find_user_by_id(user_id)
+
+        return self.inner(dict(scope, user=user))
