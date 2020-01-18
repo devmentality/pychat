@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
-from .models import *
+from .models import User, Message
 from .authentication import require_user_id
 from pychat.settings import SECRET_KEY
 from json import loads
@@ -12,13 +12,12 @@ import jwt
 @csrf_exempt
 def create_user(request):
     body = loads(request.body)
-    login = body['login']
+    username = body['login']
     password = body['password']
-
-    if UserRepository.find_user_by_login(login) is not None:
+    if User.objects.filter(username=username).first() is not None:
         return HttpResponse(status=403)
 
-    user = UserRepository.create_user(login, password)
+    user = User.objects.create_user(username=username, password=password)
     return JsonResponse({'id': user.id})
 
 
@@ -26,12 +25,13 @@ def create_user(request):
 @csrf_exempt
 def get_token(request):
     body = loads(request.body)
-    login = body['login']
+    username = body['login']
     password = body['password']
-    user = UserRepository.find_user_by_login(login)
+    user = User.objects.filter(username=username).first()
 
-    if user is None or not user.verify_password(password):
+    if user is None or not user.check_password(password):
         return HttpResponse(status=403)
+
     jwt_token = jwt.encode({'userId': user.id}, SECRET_KEY, algorithm='HS256').decode('ascii')
     header_and_payload, signature = jwt_token.rsplit('.', maxsplit=1)
 
@@ -47,7 +47,8 @@ def get_token(request):
 def send_message(request):
     body = loads(request.body)
     text = body['text']
-    MessageRepository.messages.append(Message(request.user.id, text))
+    new_message = Message(author=request.user, text=text)
+    new_message.save()
     return JsonResponse({'Result': 'Sent'})
 
 
@@ -55,7 +56,7 @@ def send_message(request):
 @require_GET
 def all_messages(request):
     messages = [
-        {'author': UserRepository.find_user_by_id(msg.author_id).login, 'text': msg.text}
-        for msg in MessageRepository.messages
+        {'author': msg.author.username, 'text': msg.text}
+        for msg in Message.objects.all()
     ]
     return JsonResponse({'messages': messages})

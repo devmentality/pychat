@@ -8,6 +8,8 @@ class ChatConsumer(WebsocketConsumer):
     def connect(self):
         if self.scope.get('user') is None:
             self.close(code=403)
+            return
+
         self.user = self.scope['user']
         self.chat_group_name = 'global'
 
@@ -26,14 +28,15 @@ class ChatConsumer(WebsocketConsumer):
 
     def receive(self, text_data=None, bytes_data=None):
         message = json.loads(text_data)
-        MessageRepository.messages.append(Message(self.user.id, message['text']))
+        new_message = Message(author=self.user, text=message['text'])
+        new_message.save()
 
         async_to_sync(self.channel_layer.group_send)(
             self.chat_group_name,
             {
                 'type': 'chat_message',
                 'message': {
-                    'author': self.user.login,
+                    'author': self.user.username,
                     'text': message['text']
                 }
             }

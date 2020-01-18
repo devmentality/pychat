@@ -1,6 +1,8 @@
 from django.http import HttpResponse
-from .models import UserRepository
+from django.db import close_old_connections
+from channels.db import database_sync_to_async
 from pychat.settings import SECRET_KEY
+from .models import User
 from functools import wraps
 from http import cookies
 import jwt
@@ -43,7 +45,7 @@ def require_user_id(view):
         if 'userId' not in payload:
             return HttpResponse(status=401)
         user_id = payload['userId']
-        user = UserRepository.find_user_by_id(user_id)
+        user = User.objects.filter(pk=user_id)
         if user is None:
             return HttpResponse(status=403)
 
@@ -64,17 +66,33 @@ def _use_cookie_authentication(request):
 def _use_authentication_header(request):
     return request.headers[AUTH_HEADER] == HEADER_AUTH
 
+# https://github.com/django/channels/issues/1399
+
 
 class WebsocketAuthMiddleware:
     def __init__(self, inner):
         self.inner = inner
 
     def __call__(self, scope):
+        return WebsocketAuthMiddlewareInstance(scope, self)
+
+
+class WebsocketAuthMiddlewareInstance:
+    def __init__(self, scope, middleware):
+        self.middleware = middleware
+        self.scope = dict(scope)
+        self.inner = self.middleware.inner
+
+    async def __call__(self, receive, send):
+        await database_sync_to_async(close_old_connections)()
+
         headers = {
             name.decode('ascii'): value.decode('ascii')
-            for name, value in scope['headers']
+            for name, value in self.scope['headers']
         }
         cookie = cookies.SimpleCookie(headers['cookie'])
+
+
 
         if self._use_cookie_authentication(headers, cookie):
             jwt_header_and_payload = cookie['auth'].value
@@ -83,25 +101,36 @@ class WebsocketAuthMiddleware:
         elif self._use_authentication_header(headers):
             jwt_token = headers['Authentication']
         else:
-            return self.inner(scope)
+            inner = self.inner(self.scope)
+            return await inner(receive, send)
 
         user = None
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms='HS256')
         if 'userId' in payload:
             user_id = payload['userId']
-            user = UserRepository.find_user_by_id(user_id)
+            user = await get_user(user_id)
 
-        return self.inner(dict(scope, user=user))
+        self.scope['user'] = user
+        inner = self.inner(self.scope)
+        return await inner(receive, send)
 
     @staticmethod
     def _use_cookie_authentication(headers, cookie):
         return (
-            'origin' in headers and
-            headers['origin'] == ORIGIN and
-            'auth' in cookie and
-            'signature' in cookie
+                'origin' in headers and
+                headers['origin'] == ORIGIN and
+                'auth' in cookie and
+                'signature' in cookie
         )
 
     @staticmethod
     def _use_authentication_header(headers):
         return 'origin' not in headers
+
+
+@database_sync_to_async
+def get_user(user_id):
+    try:
+        return User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return None
