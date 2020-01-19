@@ -1,21 +1,21 @@
-async function signUp(login, password) {
+async function signUp(username, password) {
     await fetch('/api/create_user/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({'login': login, 'password': password})
+        body: JSON.stringify({'username': username, 'password': password})
     });
 }
 
 
-async function signIn(login, password) {
+async function signIn(username, password) {
     await fetch('/api/token/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({'login': login, 'password': password})
+        body: JSON.stringify({'username': username, 'password': password})
     });
 }
 
@@ -24,17 +24,17 @@ const signUpButton = document.querySelector('.sign-up-btn');
 const signInButton = document.querySelector('.sign-in-btn');
 
 signUpButton.addEventListener('click', async (event) => {
-    const login = document.querySelector('.sign-up-login').value;
+    const username = document.querySelector('.sign-up-username').value;
     const password = document.querySelector('.sign-up-password').value;
-    await signUp(login, password);
-    await signIn(login, password);
+    await signUp(username, password);
+    await signIn(username, password);
     document.location.replace('/');
 });
 
 signInButton.addEventListener('click', async (event) => {
-    const login = document.querySelector('.sign-in-login').value;
+    const username = document.querySelector('.sign-in-username').value;
     const password = document.querySelector('.sign-in-password').value;
-    await signIn(login, password);
+    await signIn(username, password);
     document.location.replace('/');
 });
 

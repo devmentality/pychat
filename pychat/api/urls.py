@@ -3,8 +3,8 @@ from .views import *
 
 
 urlpatterns = [
-    path("create_user/", create_user, name='create_user'),
-    path("send/", send_message, name='send_message'),
-    path("messages/", all_messages, name="all_messages"),
-    path("token/", get_token, name="get_token")
+    path("create_user/", CreateUser.as_view(), name='create_user'),
+    path("send/", SendMessage.as_view(), name='send_message'),
+    path("messages/", MessageList.as_view(), name="all_messages"),
+    path("token/", GetToken.as_view(), name="get_token")
 ]

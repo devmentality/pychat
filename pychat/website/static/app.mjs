@@ -3,7 +3,7 @@ import { getCookie, makeElement, getUserId } from "./utils.mjs";
 function createMessageElement(message) {
     return makeElement(
         `<div class="message">
-            <span class="author"><i>${message.author}:</i></span> <br />
+            <span class="author"><i>${message.author.username}:</i></span> <br />
             <span class="text">${message.text}</span>
         </div>`
     );
@@ -13,7 +13,7 @@ async function renderMessages() {
     const response = await fetch('/api/messages/',{
         headers: {'x-auth-with': 'cookies'}
     });
-    const messages = (await response.json())['messages'];
+    const messages = await response.json();
 
     const messageBox = document.querySelector('#messages');
     for(const message of messages) {

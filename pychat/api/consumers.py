@@ -1,5 +1,6 @@
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
+from .serializers import MessageSerializer
 import json
 from .models import *
 
@@ -35,10 +36,7 @@ class ChatConsumer(WebsocketConsumer):
             self.chat_group_name,
             {
                 'type': 'chat_message',
-                'message': {
-                    'author': self.user.username,
-                    'text': message['text']
-                }
+                'message': MessageSerializer(new_message).data
             }
         )
 

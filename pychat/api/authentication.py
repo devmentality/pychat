@@ -1,9 +1,10 @@
-from django.http import HttpResponse
 from django.db import close_old_connections
 from channels.db import database_sync_to_async
 from pychat.settings import SECRET_KEY
+from rest_framework import authentication
+from rest_framework import exceptions
+
 from .models import User
-from functools import wraps
 from http import cookies
 import jwt
 
@@ -23,48 +24,45 @@ HEADER_AUTH = 'header'
 AUTH_TYPES = {COOKIES_AUTH, HEADER_AUTH}
 
 
-def require_user_id(view):
-    @wraps(view)
-    def wrapper(request, *args, **kwargs):
+class ApiAuthentication(authentication.BaseAuthentication):
+    def authenticate(self, request):
         if (
                 AUTH_HEADER not in request.headers or
                 request.headers[AUTH_HEADER] not in AUTH_TYPES
         ):
-            return HttpResponse(status=401)
+            return None
 
-        if _use_cookie_authentication(request):
+        if self._use_cookie_authentication(request):
             jwt_header_and_payload = request.COOKIES['auth']
             jwt_signature = request.COOKIES['signature']
             jwt_token = jwt_header_and_payload + '.' + jwt_signature
-        elif _use_authentication_header(request):
+        elif self._use_authentication_header(request):
             jwt_token = request.headers['Authentication']
         else:
-            return HttpResponse(status=401)
+            return None
 
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms='HS256')
         if 'userId' not in payload:
-            return HttpResponse(status=401)
+            return None
         user_id = payload['userId']
-        user = User.objects.filter(pk=user_id)
+        user = User.objects.filter(pk=user_id).first()
         if user is None:
-            return HttpResponse(status=403)
+            raise exceptions.AuthenticationFailed('User not found')
 
-        request.user = user
+        return user, None
 
-        return view(request, *args, **kwargs)
-    return wrapper
+    @staticmethod
+    def _use_cookie_authentication(request):
+        return (
+                request.headers[AUTH_HEADER] == COOKIES_AUTH and
+                'auth' in request.COOKIES and
+                'signature' in request.COOKIES
+        )
 
+    @staticmethod
+    def _use_authentication_header(request):
+        return request.headers[AUTH_HEADER] == HEADER_AUTH
 
-def _use_cookie_authentication(request):
-    return (
-        request.headers[AUTH_HEADER] == COOKIES_AUTH and
-        'auth' in request.COOKIES and
-        'signature' in request.COOKIES
-    )
-
-
-def _use_authentication_header(request):
-    return request.headers[AUTH_HEADER] == HEADER_AUTH
 
 # https://github.com/django/channels/issues/1399
 
@@ -91,8 +89,6 @@ class WebsocketAuthMiddlewareInstance:
             for name, value in self.scope['headers']
         }
         cookie = cookies.SimpleCookie(headers['cookie'])
-
-
 
         if self._use_cookie_authentication(headers, cookie):
             jwt_header_and_payload = cookie['auth'].value
