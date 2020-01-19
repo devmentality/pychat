@@ -1,10 +1,13 @@
-import { getCookie, makeElement, getUserId } from "./utils.mjs";
+import { getCookie, makeElement, getUserInfo, deleteCookie } from "./utils.mjs";
 
 function createMessageElement(message) {
     return makeElement(
-        `<div class="message">
-            <span class="author"><i>${message.author.username}:</i></span> <br />
-            <span class="text">${message.text}</span>
+        `
+        <div class="message-box ${userInfo.username === message.author.username ? 'own' : ''}">
+            <div class="message ${userInfo.username === message.author.username ? 'own' : ''}">
+                <span class="author"><b>${message.author.username}</b></span> <br />
+                <span class="text">${message.text}</span>
+            </div>
         </div>`
     );
 }
@@ -52,6 +55,7 @@ const authCookie = getCookie('auth');
 if (authCookie === undefined)
     document.location.replace('/login');
 
+const userInfo = getUserInfo();
 const socket = new WebSocket(`ws://${window.location.host}/ws/chat/`);
 
 socket.onmessage = function (e) {
@@ -63,6 +67,15 @@ socket.onmessage = function (e) {
 
 const sendButton = document.querySelector('#send-button');
 sendButton.addEventListener("click", onMessageSendUsingWebsockets);
+
+const logoutButton = document.querySelector('.logout-btn');
+logoutButton.addEventListener("click", (event) => {
+    deleteCookie('auth');
+    document.location.replace('/login')
+});
+
+const greeting = document.querySelector('.greeting');
+greeting.textContent = `Hi, ${userInfo.username}`
 
 renderMessages();
 

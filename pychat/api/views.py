@@ -36,7 +36,8 @@ class GetToken(APIView):
         if user is None or not user.check_password(password):
             return HttpResponse(status=403)
 
-        jwt_token = jwt.encode({'userId': user.id}, SECRET_KEY, algorithm='HS256').decode('ascii')
+        jwt_token = jwt.encode(
+            {'userId': user.id, 'username': user.username}, SECRET_KEY, algorithm='HS256').decode('ascii')
         header_and_payload, signature = jwt_token.rsplit('.', maxsplit=1)
 
         response = HttpResponse(status=200)
