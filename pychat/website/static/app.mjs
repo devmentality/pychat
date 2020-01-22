@@ -1,11 +1,15 @@
 import { getCookie, makeElement, getUserInfo, deleteCookie } from "./utils.mjs";
 
 function createMessageElement(message) {
+    const created = new Date(Date.parse(message.created));
+    const formatted = `${created.getFullYear()}-${created.getMonth() + 1}-${created.getDate()} 
+                       ${created.getHours()}:${created.getMinutes()}`;
     return makeElement(
         `
         <div class="message-box ${userInfo.username === message.author.username ? 'own' : ''}">
             <div class="message ${userInfo.username === message.author.username ? 'own' : ''}">
-                <span class="author"><b>${message.author.username}</b></span> <br />
+                <span class="author"><b>${message.author.username}</b></span> 
+                <span class="created-at"><i>${formatted}</i></span><br />
                 <span class="text">${message.text}</span>
             </div>
         </div>`

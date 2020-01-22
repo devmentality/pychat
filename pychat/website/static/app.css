@@ -1,6 +1,6 @@
 body {
     background-color: #9d9d9d;
-    font-family: Arial, sans-serif;
+        font-family: Arial, sans-serif;
 }
 
 #app {
@@ -12,13 +12,41 @@ body {
 #heading {
     height: 30px;
     padding: 5px;
+    border-bottom: #9d9d9d 1px solid;
+}
+
+.logo {
+    font-size: x-large;
+    margin-left: 10px;
+}
+
+.header-right {
+    float: right;
 }
 
 #messages {
+    height: 500px;
     padding: 0 30px 0 30px;
+    overflow-y: scroll;
 }
 
 #sending {
+    height: 40px;
+    border-top: #9d9d9d 1px solid;
+}
+
+#send-button {
+    display: inline;
+}
+
+#message-form {
+    display: inline-block;
+    margin: auto;
+}
+
+#message-text {
+    resize: none;
+    width: 500px;
 }
 
 .message-box {
@@ -31,7 +59,6 @@ body {
 }
 
 .message {
-    background-color: #9acfea;
     border-radius: 5px;
     max-width: 300px;
     margin: 10px;
@@ -42,6 +69,12 @@ body {
     margin-right: 10px;
 }
 
+.created-at {
+    font-size: small;
+    color: #9d9d9d;
+}
+
 .logout-btn {
     float: right;
+    margin-left: 5px;
 }

@@ -8,15 +8,17 @@
     <div id="app">
         <div id="heading">
             <span class="logo">Awesome chat</span>
-            <span class="greeting"></span>
-            <button class="logout-btn">Logout</button>
+            <div class="header-right">
+                <span class="greeting"></span>
+                <button class="logout-btn">Logout</button>
+            </div>
         </div>
-        <hr>
         <div id="messages">
         </div>
-        <hr>
         <div id="sending">
-            <textarea id="message-text"></textarea><button id="send-button">Send</button>
+            <div id="message-form">
+                <textarea id="message-text"></textarea><button id="send-button">Send</button>
+            </div>
         </div>
     </div>
     <script type="module" src="{% static "app.mjs" %}"></script>
