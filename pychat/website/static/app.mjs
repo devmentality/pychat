@@ -1,4 +1,5 @@
 import { getCookie, makeElement, getUserInfo, deleteCookie } from "./utils.mjs";
+import {getMessagesAsync} from "./api.mjs";
 
 function createMessageElement(message) {
     const created = new Date(Date.parse(message.created));
@@ -16,10 +17,9 @@ function createMessageElement(message) {
     );
 }
 
+
 async function renderMessages() {
-    const response = await fetch('/api/messages/',{
-        headers: {'x-auth-with': 'cookies'}
-    });
+    const response = await getMessagesAsync(currentRoom);
     const messages = await response.json();
 
     const messageBox = document.querySelector('#messages');
@@ -27,6 +27,7 @@ async function renderMessages() {
         messageBox.appendChild(createMessageElement(message));
     }
 }
+
 
 async function onMessageSend() {
     const messageText = document.querySelector("#message-text").value;
@@ -61,6 +62,7 @@ if (authCookie === undefined)
 
 const userInfo = getUserInfo();
 const socket = new WebSocket(`ws://${window.location.host}/ws/chat/`);
+const currentRoom = 1;
 
 socket.onmessage = function (e) {
     const data = JSON.parse(e.data);

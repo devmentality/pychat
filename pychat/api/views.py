@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .models import User, Message
-from .serializers import UserSerializer, MessageSerializer
+from .models import User, Message, Room
+from .serializers import UserSerializer, MessageSerializer, RoomSerializer
 from pychat.settings import SECRET_KEY
 from json import loads
 import jwt
@@ -46,20 +46,48 @@ class GetToken(APIView):
         return response
 
 
-class SendMessage(APIView):
+class CreateRoom(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         body = loads(request.body)
-        text = body['text']
-        new_message = Message(author=request.user, text=text)
-        new_message.save()
-        return Response({'Result': 'Sent'})
+        new_room = Room(title=body['title'], creator=request.user)
+        new_room.save()
+        new_room.users.add(request.user)
+        return Response({'roomId': new_room.pk})
+
+
+class GetRoom(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        room = Room.objects.get(pk=pk)
+        return Response(RoomSerializer(room).data)
 
 
 class MessageList(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        messages = Message.objects.all()
+    def get(self, request, pk):
+        messages = Message.objects.filter(room__pk=pk)
         return Response(MessageSerializer(messages, many=True).data)
+
+
+class SendMessage(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        body = loads(request.body)
+        text = body['text']
+        room = Room.objects.get(pk=pk)
+        new_message = Message(author=request.user, text=text, room=room)
+        new_message.save()
+        return Response({'Result': 'Sent'})
+
+
+class GetMyRooms(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rooms = request.user.member_of
+        return Response(RoomSerializer(rooms, many=True).data)
