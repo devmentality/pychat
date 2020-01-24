@@ -102,3 +102,11 @@ class GetMyRooms(APIView):
     def get(self, request):
         rooms = request.user.member_of
         return Response(RoomSerializer(rooms, many=True).data)
+
+
+class AddUserToRoom(RoomCreatorView):
+    def post(self, request, pk, username):
+        room = self.get_room(request, pk)
+        user = get_object_or_404(User, username=username)
+        room.users.add(user)
+        return Response({'Result': 'Added'})
