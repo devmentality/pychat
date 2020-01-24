@@ -1,11 +1,13 @@
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import User, Message, Room
 from .serializers import UserSerializer, MessageSerializer, RoomSerializer
-from pychat.settings import SECRET_KEY
+from .authorization import RoomUserPermission, RoomCreatorPermission
+from django.conf import settings
 from json import loads
 import jwt
 
@@ -37,7 +39,7 @@ class GetToken(APIView):
             return HttpResponse(status=403)
 
         jwt_token = jwt.encode(
-            {'userId': user.id, 'username': user.username}, SECRET_KEY, algorithm='HS256').decode('ascii')
+            {'userId': user.id, 'username': user.username}, settings.SECRET_KEY, algorithm='HS256').decode('ascii')
         header_and_payload, signature = jwt_token.rsplit('.', maxsplit=1)
 
         response = HttpResponse(status=200)
@@ -57,29 +59,38 @@ class CreateRoom(APIView):
         return Response({'roomId': new_room.pk})
 
 
-class GetRoom(APIView):
-    permission_classes = [IsAuthenticated]
+class RoomView(APIView):
+    def get_room(self, request, pk):
+        room = get_object_or_404(Room, pk=pk)
+        self.check_object_permissions(request, room)
+        return room
 
+
+class RoomUserView(RoomView):
+    permission_classes = [IsAuthenticated, RoomUserPermission]
+
+
+class RoomCreatorView(RoomView):
+    permission_classes = [IsAuthenticated, RoomCreatorPermission]
+
+
+class GetRoom(RoomUserView):
     def get(self, request, pk):
-        room = Room.objects.get(pk=pk)
+        room = self.get_room(request, pk)
         return Response(RoomSerializer(room).data)
 
 
-class MessageList(APIView):
-    permission_classes = [IsAuthenticated]
-
+class MessageList(RoomUserView):
     def get(self, request, pk):
-        messages = Message.objects.filter(room__pk=pk)
-        return Response(MessageSerializer(messages, many=True).data)
+        room = self.get_room(request, pk)
+        return Response(MessageSerializer(room.message_set, many=True).data)
 
 
-class SendMessage(APIView):
-    permission_classes = [IsAuthenticated]
-
+class SendMessage(RoomUserView):
     def post(self, request, pk):
         body = loads(request.body)
         text = body['text']
-        room = Room.objects.get(pk=pk)
+        room = self.get_room(request, pk)
         new_message = Message(author=request.user, text=text, room=room)
         new_message.save()
         return Response({'Result': 'Sent'})
