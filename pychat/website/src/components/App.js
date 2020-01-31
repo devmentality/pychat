@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import './appStyles.css'
 
-class App extends Component {
+export default class App extends Component {
     render() {
-        return <h1>React App</h1>
+        return <h1>Chat App</h1>
     }
 }
-
-ReactDOM.render(<App />, document.getElementById('app'));
