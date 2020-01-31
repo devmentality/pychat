@@ -1,18 +1,20 @@
 import React, { Component } from 'react';
-import { getCookie } from '../utils';
+import { getCookie, getUserInfo } from '../utils';
+import { authenticate } from '../api';
 import './appStyles.css';
 import Chat from './Chat';
 import AuthModal from './AuthModal';
 
 export default class App extends Component {
     state = {
-        isAuthenticated: false
+        isAuthenticated: false,
+        user: undefined
     };
 
     componentWillMount() {
         const hasAuthCookie = getCookie('auth');
         if (hasAuthCookie) {
-            this.setState({isAuthenticated: true});
+            this.setState({isAuthenticated: true, user: getUserInfo()});
         }
     }
 
@@ -20,23 +22,17 @@ export default class App extends Component {
         return (
             <div>
                 <h1>Chat App</h1>
-                {this.state.isAuthenticated ? <Chat /> : <AuthModal onAuthenticate={this.authenticate.bind(this)} />}
+                {this.state.isAuthenticated ? <Chat user={this.state.user}/> : <AuthModal onAuthenticate={this.onAuthenticate.bind(this)} />}
             </div>
         )
     }
 
-    async authenticate(username, password) {
-        await fetch('/api/token/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({'username': username, 'password': password})
-        });
+    async onAuthenticate(username, password) {
+        await authenticate(username, password);
 
         const hasAuthCookie = getCookie('auth');
         if (hasAuthCookie) {
-            this.setState({isAuthenticated: true});
+            this.setState({isAuthenticated: true, user: getUserInfo()});
         }
     }
 }
