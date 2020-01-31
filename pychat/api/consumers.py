@@ -12,10 +12,10 @@ class ChatConsumer(WebsocketConsumer):
             return
 
         self.user = self.scope['user']
-        self.chat_group_name = 'global'
+        self.roomId = str(self.scope['url_route']['kwargs']['roomId'])
 
         async_to_sync(self.channel_layer.group_add)(
-            self.chat_group_name,
+            self.roomId,
             self.channel_name
         )
 
@@ -23,17 +23,17 @@ class ChatConsumer(WebsocketConsumer):
 
     def disconnect(self, code):
         async_to_sync(self.channel_layer.group_discard)(
-            self.chat_group_name,
+            self.roomId,
             self.channel_name
         )
 
     def receive(self, text_data=None, bytes_data=None):
         message = json.loads(text_data)
-        new_message = Message(author=self.user, text=message['text'])
+        new_message = Message(author=self.user, text=message['text'], room_id=self.roomId)
         new_message.save()
 
         async_to_sync(self.channel_layer.group_send)(
-            self.chat_group_name,
+            self.roomId,
             {
                 'type': 'chat_message',
                 'message': MessageSerializer(new_message).data

@@ -1,27 +1,63 @@
 import React, {Component} from "react";
 import RoomList from "./RoomList";
 import RoomChat from "./RoomChat";
-import { getRooms } from '../api';
+import {getMessages, getRooms} from '../api';
 
 export default class Chat extends Component {
     state = {
-        currentRoomId: undefined,
+        currentRoom: undefined,
         rooms: [],
+        currentRoomMessages: undefined,
+        currentRoomSocket: undefined,
     };
 
     async componentWillMount() {
         const response = await getRooms();
         const rooms = await response.json();
-        if (rooms.length > 0)
-            this.setState({rooms: rooms, currentRoomId: rooms[0].title});
+        this.setState({rooms: rooms});
     }
 
     render() {
         return (
             <div>
-                <RoomList rooms={this.state.rooms}/>
-                <RoomChat roomId={this.state.currentRoomId}/>
+                <RoomList rooms={this.state.rooms} onChangeRoom={this.onChangeRoom.bind(this)}/>
+                {this.state.currentRoom ?
+                    <RoomChat room={this.state.currentRoom}
+                              messages={this.state.currentRoomMessages}
+                              onSendMessage={this.onSendMessage.bind(this)}
+                    /> :
+                    'Комната еще не выбрана'
+                }
+
             </div>
         )
+    }
+
+    async onChangeRoom(room) {
+        const response = await getMessages(room.id);
+        const messages = await response.json();
+
+        const socket = new WebSocket(`ws://${window.location.host}/ws/chat/${room.id}/`);
+        this.setState({
+            currentRoom: room,
+            currentRoomMessages: messages,
+            currentRoomSocket: socket
+        });
+
+        socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            const message = data.message;
+            this.setState({
+                currentRoomMessages: [...this.state.currentRoomMessages, message]
+            });
+        };
+    }
+
+    onSendMessage(messageText) {
+        this.state.currentRoomSocket.send(JSON.stringify(
+            {
+                'text': messageText
+            })
+        );
     }
 }
