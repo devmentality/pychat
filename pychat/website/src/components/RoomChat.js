@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+import './RoomChat.css';
 
 export default class ChatRoom extends Component {
     state = {
@@ -21,12 +22,12 @@ export default class ChatRoom extends Component {
             )
         );
         return (
-            <div>
-                <p>Приветствуем в комнате {this.props.room.title}</p>
-                <div>
+            <div className='room-chat'>
+                <div className='room-header'><span>Приветствуем в комнате {this.props.room.title}</span></div>
+                <div className='room-messages'>
                     {messageElements}
                 </div>
-                <div>
+                <div className='sending'>
                     <textarea id="message-text" onChange={this.onChangeMessage.bind(this)} value={this.state.message}/>
                     <button id="send-button" onClick={this.sendMessage.bind(this)}>Send</button>
                 </div>

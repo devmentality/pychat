@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import RoomList from "./RoomList";
 import RoomChat from "./RoomChat";
 import {getMessages, getRooms} from '../api';
+import './Chat.css';
 
 export default class Chat extends Component {
     state = {
@@ -19,16 +20,17 @@ export default class Chat extends Component {
 
     render() {
         return (
-            <div>
+            <div className='chat'>
                 <RoomList rooms={this.state.rooms} onChangeRoom={this.onChangeRoom.bind(this)}/>
-                {this.state.currentRoom ?
-                    <RoomChat room={this.state.currentRoom}
-                              messages={this.state.currentRoomMessages}
-                              onSendMessage={this.onSendMessage.bind(this)}
-                    /> :
-                    'Комната еще не выбрана'
-                }
-
+                <div className='room-container'>
+                    {this.state.currentRoom ?
+                        <RoomChat room={this.state.currentRoom}
+                                  messages={this.state.currentRoomMessages}
+                                  onSendMessage={this.onSendMessage.bind(this)}
+                        /> :
+                        'Комната еще не выбрана'
+                    }
+                </div>
             </div>
         )
     }
@@ -44,12 +46,18 @@ export default class Chat extends Component {
             currentRoomSocket: socket
         });
 
+        const messagesBox = document.querySelector('.room-messages');
+        messagesBox.scroll(0, messagesBox.scrollHeight);
+
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
             const message = data.message;
             this.setState({
                 currentRoomMessages: [...this.state.currentRoomMessages, message]
             });
+
+            const messagesBox = document.querySelector('.room-messages');
+            messagesBox.scroll(0, messagesBox.scrollHeight);
         };
     }
 

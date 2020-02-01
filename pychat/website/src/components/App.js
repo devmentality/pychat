@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { getCookie, getUserInfo } from '../utils';
+import { getCookie, getUserInfo, deleteCookie } from '../utils';
 import { authenticate } from '../api';
-import './appStyles.css';
+import './App.css';
 import Chat from './Chat';
 import AuthModal from './AuthModal';
 
@@ -20,9 +20,14 @@ export default class App extends Component {
 
     render() {
         return (
-            <div>
-                <h1>Chat App</h1>
-                {this.state.isAuthenticated ? <Chat user={this.state.user}/> : <AuthModal onAuthenticate={this.onAuthenticate.bind(this)} />}
+            <div className='main-app'>
+                <div className='app-header'>
+                    <div className='logo'>Chat App</div>
+                    {this.state.isAuthenticated ? <div className='logout'><button onClick={this.onLogout.bind(this)}>Log out</button></div> : null}
+                </div>
+                <div className='app-container'>
+                    {this.state.isAuthenticated ? <Chat user={this.state.user}/> : <AuthModal onAuthenticate={this.onAuthenticate.bind(this)} />}
+                </div>
             </div>
         )
     }
@@ -34,5 +39,10 @@ export default class App extends Component {
         if (hasAuthCookie) {
             this.setState({isAuthenticated: true, user: getUserInfo()});
         }
+    }
+
+    onLogout() {
+        deleteCookie('auth');
+        this.setState({isAuthenticated: false, user: undefined});
     }
 }

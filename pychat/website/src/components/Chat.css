@@ -1,0 +1,12 @@
+.chat {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.room-container {
+    border: 1px solid black;
+    flex-grow: 1;
+    margin-left: 10px;
+    height: 100%;
+}

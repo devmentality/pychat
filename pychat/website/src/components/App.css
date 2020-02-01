@@ -1,0 +1,32 @@
+h1 {
+    color: gray;
+}
+
+.main-app {
+    width: 800px;
+    height: 500px;
+    border: 1px solid black;
+    margin: 20px auto 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    border-bottom: 1px solid black;
+    display: flex;
+    justify-content: space-between;
+}
+
+.app-container {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: hidden; /* I dont know why this works */
+}
+
+.logo {
+    padding-left: 20px;
+}
+
+.logout {
+    padding-right: 20px;
+}

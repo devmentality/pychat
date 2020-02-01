@@ -1,10 +1,12 @@
 import React, {Component} from "react";
+import './RoomList.css';
 
 export default class RoomList extends Component {
     render() {
         const roomElements = this.props.rooms.map(
             room => (
-                <li key={room.id}>
+                <li key={room.id}
+                    className='list-element'>
                     <a onClick={async () => await this.props.onChangeRoom(room)}>
                         {room.title}
                     </a>
@@ -13,8 +15,8 @@ export default class RoomList extends Component {
         );
 
         return (
-            <div>
-                <h3>Rooms:</h3>
+            <div className='room-list'>
+                <div className='list-header'><span>Rooms</span></div>
                 <ul>
                     {roomElements}
                 </ul>
