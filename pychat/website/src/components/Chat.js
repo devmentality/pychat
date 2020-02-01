@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import RoomList from "./RoomList";
 import RoomChat from "./RoomChat";
-import {getMessages, getRooms} from '../api';
+import {getMessages, getRooms, createRoom} from '../api';
 import './Chat.css';
 
 export default class Chat extends Component {
@@ -21,7 +21,11 @@ export default class Chat extends Component {
     render() {
         return (
             <div className='chat'>
-                <RoomList rooms={this.state.rooms} onChangeRoom={this.onChangeRoom.bind(this)}/>
+                <RoomList
+                    rooms={this.state.rooms}
+                    onChangeRoom={this.onChangeRoom.bind(this)}
+                    onCreateRoom={this.onCreateRoom.bind(this)}
+                />
                 <div className='room-container'>
                     {this.state.currentRoom ?
                         <RoomChat room={this.state.currentRoom}
@@ -38,6 +42,10 @@ export default class Chat extends Component {
     async onChangeRoom(room) {
         const response = await getMessages(room.id);
         const messages = await response.json();
+
+        if (this.state.currentRoomSocket) {
+            this.state.currentRoomSocket.close();
+        }
 
         const socket = new WebSocket(`ws://${window.location.host}/ws/chat/${room.id}/`);
         this.setState({
@@ -67,5 +75,13 @@ export default class Chat extends Component {
                 'text': messageText
             })
         );
+    }
+
+    async onCreateRoom(title) {
+        await createRoom(title);
+
+        const response = await getRooms();
+        const rooms = await response.json();
+        this.setState({rooms: rooms});
     }
 }

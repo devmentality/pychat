@@ -2,8 +2,10 @@ import React, {Component} from "react";
 
 export default class AuthModal extends Component {
     state = {
-        username: '',
-        password: ''
+        login_username: '',
+        login_password: '',
+        register_username: '',
+        register_password: '',
     };
 
     render() {
@@ -11,13 +13,41 @@ export default class AuthModal extends Component {
             <div>
                 <p>Authenticate, man!</p>
                 <p>
-                    <label>Username<input type='text' name='username' value={this.state.username} onChange={this.onChange.bind(this)} /></label>
+                    <label>Username<input
+                        type='text' name='login_username'
+                        value={this.state.login_username} onChange={this.onChange.bind(this)} /></label>
                 </p>
                 <p>
-                    <label>Password<input type='password' name='password' value={this.state.password} onChange={this.onChange.bind(this)} /></label>
+                    <label>Password<input
+                        type='password' name='login_password'
+                        value={this.state.login_password} onChange={this.onChange.bind(this)} /></label>
                 </p>
-                <button onClick={async () => await this.props.onAuthenticate(this.state.username, this.state.password)}>Log in</button>
+                <button
+                    onClick={
+                        async () => await this.props.onAuthenticate(this.state.login_username, this.state.login_password)
+                    }>
+                    Log in
+                </button>
+
+                <p>Register, man!</p>
+                <p>
+                    <label>Username<input
+                        type='text' name='register_username'
+                        value={this.state.register_username} onChange={this.onChange.bind(this)} /></label>
+                </p>
+                <p>
+                    <label>Password<input
+                        type='password' name='register_password'
+                        value={this.state.register_password} onChange={this.onChange.bind(this)} /></label>
+                </p>
+                <button
+                    onClick={
+                        async () => await this.props.onRegister(this.state.register_username, this.state.register_password)
+                    }>
+                    Register
+                </button>
             </div>
+
         );
     }
 

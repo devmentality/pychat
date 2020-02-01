@@ -41,6 +41,10 @@ export default class App extends Component {
         }
     }
 
+    async onRegister(username, password) {
+
+    }
+
     onLogout() {
         deleteCookie('auth');
         this.setState({isAuthenticated: false, user: undefined});

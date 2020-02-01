@@ -5,7 +5,17 @@ export function authenticate(username, password) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({'username': username, 'password': password})
-    })
+    });
+}
+
+export function register(username, password) {
+    return fetch('/api/create_user/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({'username': username, 'password': password})
+    });
 }
 
 export function getRooms() {
@@ -24,3 +34,13 @@ export function getMessages(roomId) {
         });
 }
 
+export function createRoom(title) {
+    return fetch('/api/room/create/',{
+            method: 'POST',
+            headers: {
+                'x-auth-with': 'cookies',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'title': title})
+        });
+}
