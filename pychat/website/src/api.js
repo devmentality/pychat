@@ -44,3 +44,12 @@ export function createRoom(title) {
             body: JSON.stringify({'title': title})
         });
 }
+
+export function addUserToRoom(roomId, username) {
+    return fetch(`/api/room/${roomId}/add_user/${username}/`, {
+            method: 'POST',
+            headers: {
+                'x-auth-with': 'cookies'
+            }
+        });
+}
