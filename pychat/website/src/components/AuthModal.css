@@ -1,0 +1,91 @@
+.invisible {
+    display: none !important;
+}
+
+#main-container {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+}
+
+.auth-block {
+    width: 60%;
+    height: 80%;
+    display: grid;
+    grid-template-rows: 40% 15% 15% 30%;
+}
+
+.auth-man {
+    margin: auto;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.auth-man > span {
+    color: rgb(0, 110, 184);
+}
+
+.field {
+    display: grid;
+    grid-template-columns: 6em auto;
+}
+
+.field > label {
+    font-size: 1.1em;
+    margin: auto 0;
+}
+
+input {
+    padding: .5em;
+    margin: auto 0;
+    outline: none;
+    border: none;
+    border-radius: .2em;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    font-size: 1.1em;
+    transition: box-shadow .4s ease-in-out;
+}
+
+input:hover {
+    box-shadow: 0 0 10px rgba(0, 110, 184, 0.5);
+    transition: box-shadow .4s ease-in-out;
+}
+
+input:focus {
+    box-shadow: 0 0 10px rgba(0, 110, 184, 0.5);
+}
+
+.auth-button {
+    background: rgba(0, 153, 255, 0.8);
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: bold;
+    width: 50%;
+    margin: auto;
+    padding: 1em;
+    outline: none;
+    border-radius: .5em;
+    border: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: padding .2s ease-in-out;
+}
+
+.auth-button:hover {
+    cursor: pointer;
+    padding: 1.2em;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.auth-button:active {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.change-type {
+    margin: auto;
+}
+
+.change-type > span {
+    color: rgb(0, 110, 184);   
+    text-decoration: underline;
+    cursor: pointer;
+}

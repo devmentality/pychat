@@ -22,7 +22,7 @@ export default class App extends Component {
         return (
             <div className='main-app'>
                 <div className='app-header'>
-                    <div className='logo'>Chat App</div>
+                    <h1 className='logo'>Chat <span>App</span></h1>
                     {this.state.isAuthenticated ? <div className='logout'><button onClick={this.onLogout.bind(this)}>Log out</button></div> : null}
                 </div>
                 <div className='app-container'>
